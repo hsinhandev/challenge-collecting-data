@@ -1,3 +1,4 @@
+from typing import List, Dict
 import re
 import selenium
 from bs4 import BeautifulSoup
@@ -47,7 +48,7 @@ def extract_property_link(num_pages: int) -> List[str]:
     return links
 
 
-def get_property_link_until_thousnad() -> Dict[str]:
+def get_property_link_until_thousnad() -> Dict[str, str]:
     """[This function should call extract_property_link 1000 times, to get all the property link]
 
     Returns:
