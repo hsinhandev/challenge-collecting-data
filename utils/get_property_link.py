@@ -7,8 +7,9 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.firefox.service import Service
 from selenium.webdriver.firefox.options import Options
 
-from concurrent.futures import ThreadPoolExecutor
+from concurrent.futures import ProcessPoolExecutor
 import time
+from helper import kill_browser
 
 # TODO use closure to create browser
 # =================================================================init
@@ -50,29 +51,25 @@ def extract_property_link(num_pages: int) -> List[str]:
 if __name__ == "__main__":
     start = time.perf_counter()
 
-    futures = []
+    # futures = []
     property_link_output = {"links": []}
 
-    with ThreadPoolExecutor(max_workers=10) as ex:
-
-        # page = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
-        # f1 = ex.map(extract_property_link, page)
-
-        for idx in range(1, 10):
-            futures.append(ex.submit(extract_property_link, idx))
+    with ProcessPoolExecutor(max_workers=10) as ex:
+        futures = ex.map(extract_property_link, range(1, 10))
+        # for idx in range(1, 10):
+        #     futures.append(ex.submit(extract_property_link, idx))
 
         for future in futures:
-            for link in future.result():
+            for link in future:
                 property_link_output["links"].append(link)
-        # browser.close()
 
         end = time.perf_counter()
-
-        browser.close()
         print(property_link_output)
-        # print("quit browser")
 
-        df = pd.DataFrame(property_link_output)
-        df.to_csv(r"./data/property_link.csv", index=False, header=True)
+        # browser.quit()
+        kill_browser()
+
+        # df = pd.DataFrame(property_link_output)
+        # df.to_csv(r"./data/property_link.csv", index=False, header=True)
 
     print(f"How long does it take: {round(end - start, 2)}")
