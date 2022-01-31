@@ -7,13 +7,17 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.firefox.service import Service
 from selenium.webdriver.firefox.options import Options
 
+from concurrent.futures import ThreadPoolExecutor
+import time
+
 # TODO use closure to create browser
 # =================================================================init
 service = Service("./vendor/geckodriver")
 firefox_options = Options()
 # TODO debug
-# firefox_options.add_argument("--headless")  # Ensure GUI is off
+firefox_options.add_argument("--headless")  # Ensure GUI is off
 browser = webdriver.Firefox(service=service, options=firefox_options)
+browser.minimize_window()
 
 
 def extract_property_link(num_pages: int) -> List[str]:
@@ -43,29 +47,32 @@ def extract_property_link(num_pages: int) -> List[str]:
     return property_link
 
 
-def get_property_link_until_ten_thousnad() -> Dict[str, str]:
-    """[This function should call extract_property_link until 10,000 property link]
-
-    Returns:
-        [type]: [description]
-    """
-    properties_link = {"link": []}
-
-    # TODO fix crash at page 12
-    for num in range(1, 100):
-        for href in extract_property_link(num):
-            properties_link["link"].append(href)
-    return properties_link
-
-
 if __name__ == "__main__":
-    try:
-        property_link_output = get_property_link_until_ten_thousnad()
+    start = time.perf_counter()
+
+    futures = []
+    property_link_output = {"links": []}
+
+    with ThreadPoolExecutor(max_workers=10) as ex:
+
+        # page = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+        # f1 = ex.map(extract_property_link, page)
+
+        for idx in range(1, 10):
+            futures.append(ex.submit(extract_property_link, idx))
+
+        for future in futures:
+            for link in future.result():
+                property_link_output["links"].append(link)
+        # browser.close()
+
+        end = time.perf_counter()
+
+        browser.close()
+        print(property_link_output)
+        # print("quit browser")
+
         df = pd.DataFrame(property_link_output)
         df.to_csv(r"./data/property_link.csv", index=False, header=True)
-    except NoSuchElementException:
-        time.sleep(2)
-    except TimeoutException as ex:
-        print(ex.message)
-    finally:
-        browser.quit()
+
+    print(f"How long does it take: {round(end - start, 2)}")
