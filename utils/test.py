@@ -11,39 +11,28 @@ import time
 from typing import List
 
 
-def getAddresse(self) -> List[str]:
-    
+@property
+def getSurfacePlot(self):
+    """
+    to get the surface of the plot for one property
+    """
     url = "https://www.immoweb.be/en/classified/town-house/for-sale/laeken/1020/9730456?searchId=61f79f25891ae"
 
-    driver = WebDriver()
+    response = requests.get(url)
 
-    driver.get(url)
+    regex = "[0-9]+"
 
-    driver.minimize_window()
+    soup = BeautifulSoup(response.content, "lxml")
 
-    driver.implicitly_wait(10)
+    plot = soup.select("tr.classified-table__row")
 
-    address:List[str] = driver.find_elements(By.CLASS_NAME,"classified__information--address-row")
+    for i,elem in enumerate(plot):
 
-    #subdivised in cas we need the information in a more specific way (adress = street + code + localityName)
-
-    street:str = address[0].text
-
-    locality = address[1].text
-
-    locality:str = locality.strip()
-
-    code,dash,localityName = locality.split()
-
-    fullLocality:List[str] = []
-
-    fullLocality.append(street)
-    fullLocality.append(code)
-    fullLocality.append(dash)
-    fullLocality.append(localityName)
-
-    driver.close()
-
-    return fullLocality
+        for x,subElem in enumerate(elem):
+            if str(subElem).find("Surface of the plot") != -1:
+                myArray = elem.select_one("td")
+                
+    surfacePlot = re.findall(regex,str(myArray))[0]
 
 
+    return surfacePlot

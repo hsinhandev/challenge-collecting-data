@@ -6,6 +6,7 @@ import re
 import selenium
 from selenium.webdriver.firefox.webdriver import WebDriver
 from typing import List
+from selenium.webdriver.common.by import By
 
 class Cleaner:
 
@@ -131,3 +132,30 @@ class Cleaner:
         driver.close()
 
         return fullLocality
+
+
+@property
+def getSurfacePlot(self):
+    """
+    to get the surface of the plot for one property
+    """
+    url = "https://www.immoweb.be/en/classified/town-house/for-sale/laeken/1020/9730456?searchId=61f79f25891ae"
+
+    response = requests.get(url)
+
+    regex = "[0-9]+"
+
+    soup = BeautifulSoup(response.content, "lxml")
+
+    plot = soup.select("tr.classified-table__row")
+
+    for i,elem in enumerate(plot):
+
+        for x,subElem in enumerate(elem):
+            if str(subElem).find("Surface of the plot") != -1:
+                myArray = elem.select_one("td")
+                
+    surfacePlot = re.findall(regex,str(myArray))[0]
+
+
+    return int(surfacePlot)
