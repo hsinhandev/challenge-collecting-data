@@ -1,4 +1,5 @@
 from asyncio.base_subprocess import BaseSubprocessTransport
+from threading import local
 import requests
 from bs4 import BeautifulSoup
 import lxml
@@ -6,25 +7,43 @@ import re
 from selenium.webdriver.firefox.webdriver import WebDriver
 import selenium
 from selenium.webdriver.common.by import By
+import time
+from typing import List
 
 
-
-@property
-def getSurface(self):
-
+def getAddresse(self) -> List[str]:
+    
     url = "https://www.immoweb.be/en/classified/town-house/for-sale/laeken/1020/9730456?searchId=61f79f25891ae"
 
-    response = requests.get(url)
+    driver = WebDriver()
 
-    soup = BeautifulSoup(response.content, "lxml")
+    driver.get(url)
 
-    livingArea = soup.select("td.classified-table__data")
+    driver.minimize_window()
 
-    for i,elem in enumerate(livingArea):
-        if i == 10:
-            regex = "[0-9]+"
-            surface = re.findall(regex,str(elem))[0]
+    driver.implicitly_wait(10)
 
-    return int(surface)
+    address:List[str] = driver.find_elements(By.CLASS_NAME,"classified__information--address-row")
+
+    #subdivised in cas we need the information in a more specific way (adress = street + code + localityName)
+
+    street:str = address[0].text
+
+    locality = address[1].text
+
+    locality:str = locality.strip()
+
+    code,dash,localityName = locality.split()
+
+    fullLocality:List[str] = []
+
+    fullLocality.append(street)
+    fullLocality.append(code)
+    fullLocality.append(dash)
+    fullLocality.append(localityName)
+
+    driver.close()
+
+    return fullLocality
 
 

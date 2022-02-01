@@ -2,6 +2,10 @@ import os
 import pandas as pd
 import requests
 from bs4 import BeautifulSoup
+import re
+import selenium
+from selenium.webdriver.firefox.webdriver import WebDriver
+from typing import List
 
 class Cleaner:
 
@@ -88,3 +92,42 @@ class Cleaner:
                 surface = re.findall(regex,str(elem))[0]
 
         return int(surface)
+
+
+    @property
+    def getAddresse(self) -> List[str]:
+        """
+        subdivised in cas" we need the information in a more specific way 
+        (adress = street + code + localityName)
+        """
+    
+        url = "https://www.immoweb.be/en/classified/town-house/for-sale/laeken/1020/9730456?searchId=61f79f25891ae"
+
+        driver = WebDriver()
+
+        driver.get(url)
+
+        driver.minimize_window()
+
+        driver.implicitly_wait(10)
+
+        address:List[str] = driver.find_elements(By.CLASS_NAME,"classified__information--address-row")
+
+        #address = street + locality
+        street:str = address[0].text
+        locality = address[1].text
+
+        locality:str = locality.strip()
+
+        code,dash,localityName = locality.split()
+
+        fullLocality:List[str] = []
+
+        fullLocality.append(street)
+        fullLocality.append(code)
+        fullLocality.append(dash)
+        fullLocality.append(localityName)
+
+        driver.close()
+
+        return fullLocality
