@@ -1,5 +1,6 @@
 from asyncio.base_subprocess import BaseSubprocessTransport
 from threading import local
+from urllib import response
 import requests
 from bs4 import BeautifulSoup
 import lxml
@@ -9,28 +10,15 @@ import selenium
 from selenium.webdriver.common.by import By
 import time
 from typing import List
+from pandas import DataFrame, read_html
 
-@property
-def getNumbers(self,itemWeWant):
-    url = "https://www.immoweb.be/en/classified/town-house/for-sale/laeken/1020/9730456?searchId=61f79f25891ae"
 
-    response = requests.get(url)
 
-    regex = "[0-9]+"
+url = "https://www.immoweb.be/en/classified/town-house/for-sale/laeken/1020/9730456?searchId=61f79f25891ae"
 
-    soup = BeautifulSoup(response.content, "lxml")
+response = requests.get(url)
 
-    plot = soup.select("tr.classified-table__row")
+soup = BeautifulSoup(response.content, "lxml")
 
-    for i,elem in enumerate(plot):
-
-        for x,subElem in enumerate(elem):
-            if str(subElem).find(itemWeWant) != -1:
-
-                myArray = elem.select_one("td")
-                
-                terraceSurface:int = re.findall(regex,str(myArray))[0]
-            
-    return int(terraceSurface)
-                
+soup2 = soup.prettify()
 
