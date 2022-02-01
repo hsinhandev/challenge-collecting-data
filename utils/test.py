@@ -11,7 +11,7 @@ import time
 from typing import List
 
 @property
-def getTerraceSurface(self):
+def getNumbers(self,itemWeWant):
     url = "https://www.immoweb.be/en/classified/town-house/for-sale/laeken/1020/9730456?searchId=61f79f25891ae"
 
     response = requests.get(url)
@@ -25,7 +25,7 @@ def getTerraceSurface(self):
     for i,elem in enumerate(plot):
 
         for x,subElem in enumerate(elem):
-            if str(subElem).find("Terrace surface") != -1:
+            if str(subElem).find(itemWeWant) != -1:
 
                 myArray = elem.select_one("td")
                 
