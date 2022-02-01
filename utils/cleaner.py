@@ -183,3 +183,27 @@ def getGardenSurface(self):
                 gardenSurface:int = re.findall(regex,str(myArray))[0]
             
     return int(gardenSurface)
+
+
+@property
+def getTerraceSurface(self):
+    url = "https://www.immoweb.be/en/classified/town-house/for-sale/laeken/1020/9730456?searchId=61f79f25891ae"
+
+    response = requests.get(url)
+
+    regex = "[0-9]+"
+
+    soup = BeautifulSoup(response.content, "lxml")
+
+    plot = soup.select("tr.classified-table__row")
+
+    for i,elem in enumerate(plot):
+
+        for x,subElem in enumerate(elem):
+            if str(subElem).find("Terrace surface") != -1:
+
+                myArray = elem.select_one("td")
+                
+                terraceSurface:int = re.findall(regex,str(myArray))[0]
+            
+    return int(terraceSurface)

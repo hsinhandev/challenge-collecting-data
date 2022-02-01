@@ -11,7 +11,7 @@ import time
 from typing import List
 
 @property
-def getGardenSurface(self):
+def getTerraceSurface(self):
     url = "https://www.immoweb.be/en/classified/town-house/for-sale/laeken/1020/9730456?searchId=61f79f25891ae"
 
     response = requests.get(url)
@@ -25,12 +25,12 @@ def getGardenSurface(self):
     for i,elem in enumerate(plot):
 
         for x,subElem in enumerate(elem):
-            if str(subElem).find("Garden surface") != -1:
+            if str(subElem).find("Terrace surface") != -1:
 
                 myArray = elem.select_one("td")
                 
-                gardenSurface:int = re.findall(regex,str(myArray))[0]
+                terraceSurface:int = re.findall(regex,str(myArray))[0]
             
-    return int(gardenSurface)
+    return int(terraceSurface)
                 
 
