@@ -16,9 +16,10 @@ from pandas import DataFrame, read_html
 
 url = "https://www.immoweb.be/en/classified/town-house/for-sale/laeken/1020/9730456?searchId=61f79f25891ae"
 
-response = requests.get(url)
+regex = "[^\/]+"
 
-soup = BeautifulSoup(response.content, "lxml")
+dividedUrl = re.findall(regex,url)
 
-soup2 = soup.prettify()
+subtypeOfProperty = dividedUrl[4]
 
+locality = dividedUrl[6] + " " + dividedUrl[7]

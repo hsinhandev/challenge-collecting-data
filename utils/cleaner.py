@@ -64,6 +64,20 @@ class Cleaner:
 
         response = requests.get(url)
 
+        myData:dict = {}
+
+        regex:str = "[^\/]+"
+
+        dividedUrl:List[str] = re.findall(regex,url)
+
+        subtypeOfProperty:str = dividedUrl[4]
+
+        locality:str = dividedUrl[6] + " " + dividedUrl[7]
+
+        myData["Subtype of property"] = subtypeOfProperty
+
+        myData["Locality"] = locality
+
         soup = BeautifulSoup(response.content, "lxml")
 
         soup2 = soup.prettify()
@@ -112,8 +126,7 @@ class Cleaner:
             "Building condition"
         ]
 
-        myData:dict = {}
-
+    
         for title in titles:
 
             for firstColumn,secondColumn in title.iterrows():
@@ -129,4 +142,3 @@ class Cleaner:
 
 
         return myData
-
