@@ -10,12 +10,8 @@ from selenium.webdriver.common.by import By
 import time
 from typing import List
 
-
 @property
-def getSurfacePlot(self):
-    """
-    to get the surface of the plot for one property
-    """
+def getGardenSurface(self):
     url = "https://www.immoweb.be/en/classified/town-house/for-sale/laeken/1020/9730456?searchId=61f79f25891ae"
 
     response = requests.get(url)
@@ -29,10 +25,12 @@ def getSurfacePlot(self):
     for i,elem in enumerate(plot):
 
         for x,subElem in enumerate(elem):
-            if str(subElem).find("Surface of the plot") != -1:
+            if str(subElem).find("Garden surface") != -1:
+
                 myArray = elem.select_one("td")
                 
-    surfacePlot = re.findall(regex,str(myArray))[0]
+                gardenSurface:int = re.findall(regex,str(myArray))[0]
+            
+    return int(gardenSurface)
+                
 
-
-    return surfacePlot
