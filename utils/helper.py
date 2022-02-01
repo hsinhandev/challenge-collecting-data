@@ -3,6 +3,7 @@ from sys import platform
 
 
 def kill_browser():
+    """[kill selenium browser instance when scraping is done.]"""
     if platform == "linux" or platform == "linux2":
         # linux
         pass
