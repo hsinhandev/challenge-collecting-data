@@ -47,7 +47,10 @@ class Cleaner:
         """
 
         response = requests.get(url)
-        print(url)
+        soup = BeautifulSoup(response.text, "lxml").prettify()
+        price = BeautifulSoup(response.text, "lxml").select('div.classified__header-primary-info p.classified__price span.sr-only')[0].string
+
+
         regex: str = "[^\/]+"
         dividedUrl: List[str] = re.findall(regex, url)
 
@@ -55,8 +58,8 @@ class Cleaner:
         self.output["Subtype of property"].append(subtypeOfProperty)
         self.output["Locality"].append(dividedUrl[6])
         self.output["Postal_code"].append(dividedUrl[7])
+        self.output["Price"].append(price)
 
-        soup = BeautifulSoup(response.text, "lxml").prettify()
         tables: DataFrame = pd.read_html(soup)
 
 
