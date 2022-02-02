@@ -1,20 +1,20 @@
-import os
 import logging
-import pandas as pd
-import requests
+from typing import Dict, List
 from urllib import parse
+
+import pandas as pd
+import numpy as np
+
+import requests
 from bs4 import BeautifulSoup
+
 import constants
-from typing import List, Dict
 
 
 def csv_to_list() -> List[str]:
     links = None
     try:
-        property_csv_path = os.path.join(
-            os.path.dirname(__file__), "../data/property_link.csv"
-        )
-        df = pd.read_csv(property_csv_path)
+        df = pd.read_csv("./data/property_link.csv")
         links = df.links.to_list()
     except IOError as e:
         logging.exception("")
@@ -23,12 +23,13 @@ def csv_to_list() -> List[str]:
     return links
 
 
-def extract_property_info(url: str):
+def extract_property_info(url: str, idx: int):
     """[Extract infomation from each property]"""
     # OUTPUT comese from __main__
 
     html = requests.get(url)
 
+    idx = idx + 1
     if html.ok:
         soup = BeautifulSoup(html.content, "lxml")
 
@@ -36,7 +37,11 @@ def extract_property_info(url: str):
         property_type = parse_property_type(parsed_url[3])
         output["property_type"].append(property_type)
         output["subtype_of_property"].append(parsed_url[3])
-        output["locality"].append(parsed_url[5].replace("-", " "))
+        output["Locality"].append(parsed_url[5].replace("-", " "))
+        output["Postal_code"].append(parsed_url[6])
+        output["price"].append(
+            soup.select("p.classified__price span.sr-only")[0].string
+        )
 
         attributes = soup.select("th.classified-table__header")
 
@@ -47,20 +52,18 @@ def extract_property_info(url: str):
             key = tag.string.strip()
             # https://www.crummy.com/software/BeautifulSoup/bs4/doc/#string
             # https://www.crummy.com/software/BeautifulSoup/bs4/doc/#contents-and-children
-            # Read DOCUMENTATION!
-            # Waste my time!!!!!
+            # Read DOCUMENTATION! # Waste my time!!!!!
             value = tag.find_next("td").contents[0].strip()
             output[key].append(value)
-            print(f"{key}: {value}")
+            # print(f"{key}: {value}")
 
         # fill empty columns
         for k in constants.TARGET_ATTRS_YES_NO:
-            if not output[k]:
+            if not output[k] or len(output[k]) != idx:
                 output[k].append(0)
         for k in constants.TARGET_ATTRS:
-            if not output[k]:
+            if not output[k] or len(output[k]) != idx:
                 output[k].append(None)
-
         return output
 
     raise Exception("Could not parse")
@@ -77,5 +80,15 @@ if __name__ == "__main__":
     output: Dict[str, List[str]] = {k: [] for k in constants.TARGET_ATTRS}
     property_links = csv_to_list()
 
-    extract_property_info(property_links[2])
-    print(output)
+    for idx, link in enumerate(property_links[0:15]):
+        extract_property_info(link, idx)
+
+    df = pd.DataFrame(output)
+    # Data cleaning
+    df["Kitchen type"] = np.where(df["Kitchen type"] != "Not installed", 1, 0)
+    # clean YES/NO to 1/0
+    for column in df:
+        if column in constants.TARGET_ATTRS_YES_NO:
+            df[column] = df[column].apply(lambda c: 0 if c == "No" else 1)
+
+    df.to_csv("./data/property_info.csv")

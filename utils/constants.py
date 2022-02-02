@@ -1,7 +1,8 @@
 TARGET_ATTRS = (
     "property_type",
     "subtype_of_property",
-    "locality",
+    "Locality",
+    "Postal_code",
     "price",
     "Furnished",
     "Kitchen type",
@@ -24,6 +25,7 @@ TARGET_ATTRS_YES_NO = (
     "Swimming pool",
     "Furnished",
     "How many fireplaces?",
+    "Kitchen type",
 )
 
 APARTMENT_TYPE = (
