@@ -5,6 +5,7 @@ from bs4 import BeautifulSoup
 import re
 from typing import List
 import lxml
+from csv import reader
 
 
 class Cleaner:
@@ -25,6 +26,15 @@ class Cleaner:
         "Subtype of property",
         "Locality",
         "Postal_code",
+    ]
+    list_yes_or_no: List[str] =[
+        "Living area",
+        "Furnished",
+        "Terrace surface",
+        "Garden Surface",
+        "Surface of the plot",
+        "Swimming pool",
+        "Kitchen type"
     ]
 
     def __init__(self):
@@ -55,9 +65,31 @@ class Cleaner:
                 key = v[0]
                 value = v[1]
 
+                # Clean up
+                if key == "Price":
+                    value = value.split(" ")[3]
+                elif key in self.list_yes_or_no and value == "No":
+                    value = 0
+                elif key in ["Living area", "Terrace surface", "Garden Surface", "Surface of the plot"]:
+                    value = value.split(" ")[0]
+
+                if key == "Kitchen type":
+                    value = 1
+                    if key == "Not installed":
+                        value = 0
+
                 for item in self.list_asked:
                     if key == item:
                         self.output[key].append(value)
+
+        # fill empty column
+        for k in self.list_yes_or_no:
+            if not self.output[k]:
+                self.output[k].append(0)
+
+        for k in self.list_asked:
+            if not self.output[k]:
+                self.output[k].append(None)
 
         return self.output
 
