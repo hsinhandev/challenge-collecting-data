@@ -45,11 +45,7 @@ class Cleaner:
 
         soup = BeautifulSoup(response.text, "lxml").prettify()
         tables: DataFrame = pd.read_html(soup)
-
-        df = pd.DataFrame(tables)
-
         # fmt:off
-        #  get warning here
         df = pd.concat(
             [tables[0], tables[1], tables[2], tables[3], tables[4], tables[5], tables[6]]
         )
