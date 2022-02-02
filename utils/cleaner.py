@@ -25,7 +25,7 @@ def csv_to_list() -> List[str]:
 
 def extract_property_info(url: str):
     """[Extract infomation from each property]"""
-    # OUTPUT comese from main
+    # OUTPUT comese from __main__
 
     html = requests.get(url)
 
@@ -37,6 +37,29 @@ def extract_property_info(url: str):
         output["property_type"].append(property_type)
         output["subtype_of_property"].append(parsed_url[3])
         output["locality"].append(parsed_url[5].replace("-", " "))
+
+        attributes = soup.select("th.classified-table__header")
+
+        for tag in attributes:
+            if tag.string.strip() not in constants.TARGET_ATTRS:
+                continue
+
+            key = tag.string.strip()
+            # https://www.crummy.com/software/BeautifulSoup/bs4/doc/#string
+            # https://www.crummy.com/software/BeautifulSoup/bs4/doc/#contents-and-children
+            # Read DOCUMENTATION!
+            # Waste my time!!!!!
+            value = tag.find_next("td").contents[0].strip()
+            output[key].append(value)
+            print(f"{key}: {value}")
+
+        # fill empty columns
+        for k in constants.TARGET_ATTRS_YES_NO:
+            if not output[k]:
+                output[k].append(0)
+        for k in constants.TARGET_ATTRS:
+            if not output[k]:
+                output[k].append(None)
 
         return output
 
@@ -54,5 +77,5 @@ if __name__ == "__main__":
     output: Dict[str, List[str]] = {k: [] for k in constants.TARGET_ATTRS}
     property_links = csv_to_list()
 
-    extract_property_info(property_links[3])
+    extract_property_info(property_links[2])
     print(output)
