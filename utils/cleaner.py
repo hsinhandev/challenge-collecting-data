@@ -3,142 +3,72 @@ import pandas as pd
 import requests
 from bs4 import BeautifulSoup
 import re
-import selenium
-from selenium.webdriver.firefox.webdriver import WebDriver
 from typing import List
-from selenium.webdriver.common.by import By
-from pandas import DataFrame
-from pandas import read_html
+import lxml
+
 
 class Cleaner:
+    # a list of everything that the exercice ask
+    list_asked: List[str] = [
+        "Price",
+        "Bathrooms",
+        "Living area",
+        "Kitchen type",
+        "Furnished",
+        "How many fireplaces?",
+        "Terrace surface",
+        "Garden Surface",
+        "Surface of the plot",
+        "Number of frontages",
+        "Swimming pool",
+        "Building condition",
+        "Subtype of property",
+        "Locality",
+        "Postal_code",
+    ]
 
     def __init__(self):
-        pass
+        self.output = {k: [] for k in list(self.list_asked)}
 
-
-    @property
-    def getAddresse(self) -> List[str]:
-        """
-        subdivised in cas" we need the information in a more specific way 
-        (adress = street + code + localityName)
-        """
-    
-        url = "https://www.immoweb.be/en/classified/town-house/for-sale/laeken/1020/9730456?searchId=61f79f25891ae"
-
-        driver = WebDriver()
-
-        driver.get(url)
-
-        driver.minimize_window()
-
-        driver.implicitly_wait(10)
-
-        address:List[str] = driver.find_elements(By.CLASS_NAME,"classified__information--address-row")
-
-        #address = street + locality
-        street:str = address[0].text
-        locality = address[1].text
-
-        locality:str = locality.strip()
-
-        code,dash,localityName = locality.split()
-
-        fullLocality:List[str] = []
-
-        fullLocality.append(street)
-        fullLocality.append(code)
-        fullLocality.append(dash)
-        fullLocality.append(localityName)
-
-        driver.close()
-
-        return fullLocality
-
-    @property
-    def getData(self) -> dict:
+    def getData(self, url) -> dict:
         """
         to get all the data we need that we can found in the web table
         """
 
-        url = "https://www.immoweb.be/en/classified/town-house/for-sale/laeken/1020/9730456?searchId=61f79f25891ae"
-
         response = requests.get(url)
+        regex: str = "[^\/]+"
+        dividedUrl: List[str] = re.findall(regex, url)
+        subtypeOfProperty: str = dividedUrl[4]
+        self.output["Subtype of property"].append(subtypeOfProperty)
+        self.output["Locality"].append(dividedUrl[6])
+        self.output["Postal_code"].append(dividedUrl[7])
 
-        myData:dict = {}
+        soup = BeautifulSoup(response.text, "lxml").prettify()
+        tables: DataFrame = pd.read_html(soup)
 
-        regex:str = "[^\/]+"
+        df = pd.DataFrame(tables)
 
-        dividedUrl:List[str] = re.findall(regex,url)
+        # fmt:off
+        #  get warning here
+        df = pd.concat(
+            [tables[0], tables[1], tables[2], tables[3], tables[4], tables[5], tables[6]]
+        )
 
-        subtypeOfProperty:str = dividedUrl[4]
+        for _, v in df.iterrows():
+            if v[0] in self.list_asked:
+                key = v[0]
+                value = v[1]
 
-        locality:str = dividedUrl[6] + " " + dividedUrl[7]
-
-        myData["Subtype of property"] = subtypeOfProperty
-
-        myData["Locality"] = locality
-
-        soup = BeautifulSoup(response.content, "lxml")
-
-        soup2 = soup.prettify()
-
-        tables:DataFrame  = read_html(soup2)
-
-        general:DataFrame = tables[0]
-
-        interior:DataFrame  = tables[1]
-
-        exterior:DataFrame  = tables[2]
-
-        facilities:DataFrame  = tables[3]
-
-        energy:DataFrame  = tables[4]
-
-        townPlanning:DataFrame  = tables[5]
-
-        financial:DataFrame  = tables[6]
-
-
-        #put the sub data frame in a list to a easy acces in the loop
-        titles:List[DataFrame] = [
-            general,
-            interior,
-            exterior,
-            facilities,
-            energy,
-            townPlanning,
-            financial
-        ]
-
-
-        #a list of everything that the exercice ask
-        listAsked:List[str] = [
-            "Price",
-            "Bathrooms",
-            "Living area",
-            "Kitchen type",
-            "Furnished",
-            "How many fireplaces?",
-            "Terrace surface","Garden Surface",
-            "Surface of the plot",
-            "Number of frontages",
-            "Swimming pool",
-            "Building condition"
-        ]
-
-    
-        for title in titles:
-
-            for firstColumn,secondColumn in title.iterrows():
-
-                key = secondColumn[0]
-                value = secondColumn[1]
-
-                for item in listAsked:
-
+                for item in self.list_asked:
                     if key == item:
+                        self.output[key].append(value)
 
-                        myData[key] = value
+        return self.output
 
 
-        return myData
+if __name__ == "__main__":
+    dealer = Cleaner()
+
+    url = "https://www.immoweb.be/en/classified/town-house/for-sale/laeken/1020/9730456?searchId=61f79f25891ae"
+    result = dealer.getData(url)
+    print(result)
