@@ -1,65 +1,121 @@
 import os
-import lxml
-import requests
 import pandas as pd
-from csv import reader
+import requests
 from bs4 import BeautifulSoup
+import csv
+import re
+import selenium
+from selenium.webdriver.firefox.webdriver import WebDriver
+from typing import List
+from selenium.webdriver.common.by import By
+from pandas import DataFrame
+from pandas import read_html
+import concurrent.futures
+from functools import reduce
 
-links = []
+class Cleaner:
+      
+      def __init__(self):
+            
+            self.links = pd.read_csv("./data/links.csv")['link']
 
-csv_path = os.path.abspath("data/links.csv")
 
-with open(csv_path, 'r') as file:
-    csv_reader = reader(file)
-    for row in csv_reader:
-        links.append(row[0])
 
-def get_data(link):
-    r = requests.get(link)
-    soup = BeautifulSoup(r.content, "lxml")
+      def getData(self,url) -> dict:
+        """
+        to get all the data we need that we can found in the web table
+        """
 
-    container = soup.find("dl", attrs={"class": "tab-content listing-tabs"})
-    print(container.find('h5'))
+        response = requests.get(url)
 
-for link in links:
-    get_data(link)
-    break
+        myData:dict = {}
 
-target_attributes = (
-    "Locality",
-    "Type of property",
-    "Subtype of property",
-    "Price",
-    "Type of sale",
-    "Number of rooms",
-    "Area",
-    "State of the building " "Surface of the land",
-    "Surface area of the plot of land",
-    "Number of facades",
-    "Swimming pool",
-    "Fully equipped kitchen",
-    "Furnished",
-    "Open fire ",
-    "Terrace",
-    "Garden",
-)
+        regex:str = "[^\/]+"
 
-target_attributes_FR = (
-    "Locality",
-    "Type du bien",
-    "Subtype of property",
-    "Prix",
-    "Disponibilité",
-    "Number of rooms",
-    "Ville",
-    "État du bien",
-    "Surface of the land",
-    "Surface area of the plot of land",
-    "Number of facades",
-    "Swimming pool",
-    "Fully equipped kitchen",
-    "Furnished",
-    "Open fire ",
-    "Terrace",
-    "Garden",
-)
+        dividedUrl:List[str] = re.findall(regex,url)
+
+        subtypeOfProperty:str = dividedUrl[4]
+
+        locality:str = dividedUrl[6] + " " + dividedUrl[7]
+
+        myData["Subtype of property"] = subtypeOfProperty
+
+        myData["Locality"] = locality
+
+        soup = BeautifulSoup(response.content, "lxml")
+
+        soup2 = soup.prettify()
+
+        tables:DataFrame  = read_html(soup2)
+
+        general:DataFrame = tables[0]
+
+        interior:DataFrame  = tables[1]
+
+        exterior:DataFrame  = tables[2]
+
+        facilities:DataFrame  = tables[3]
+
+        energy:DataFrame  = tables[4]
+
+        townPlanning:DataFrame  = tables[5]
+
+        financial:DataFrame  = tables[6]
+
+
+        #put the sub data frame in a list to a easy acces in the loop
+        titles:List[DataFrame] = [
+            general,
+            interior,
+            exterior,
+            facilities,
+            energy,
+            townPlanning,
+            financial
+        ]
+
+
+        #a list of everything that the exercice ask
+        listAsked:List[str] = [
+            "Price",
+            "Bathrooms",
+            "Living area",
+            "Kitchen type",
+            "Furnished",
+            "How many fireplaces?",
+            "Terrace surface","Garden Surface",
+            "Surface of the plot",
+            "Number of frontages",
+            "Swimming pool",
+            "Building condition"
+        ]
+
+    
+        for title in titles:
+
+            for firstColumn,secondColumn in title.iterrows():
+
+                key = secondColumn[0]
+                value = secondColumn[1]
+
+                for item in listAsked:
+
+                    if key == item:
+
+                        myData[key] = value
+
+
+        return myData
+        
+        
+      def concurrent(self):
+            print(self.links[0])
+            with concurrent.futures.ThreadPoolExecutor() as executor:
+                  executor.map(self.getData, self.links[0])
+
+
+test = Cleaner()
+
+url = "https://www.immoweb.be/en/classified/town-house/for-sale/laeken/1020/9730456?searchId=61f79f25891ae"
+
+print(test.concurrent())
