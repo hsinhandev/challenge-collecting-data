@@ -51,10 +51,10 @@ class Cleaner:
         regex: str = "[^\/]+"
         dividedUrl: List[str] = re.findall(regex, url)
 
-        # subtypeOfProperty: str = dividedUrl[4]
-        # self.output["Subtype of property"].append(subtypeOfProperty)
-        # self.output["Locality"].append(dividedUrl[6])
-        # self.output["Postal_code"].append(dividedUrl[7])
+        subtypeOfProperty: str = dividedUrl[4]
+        self.output["Subtype of property"].append(subtypeOfProperty)
+        self.output["Locality"].append(dividedUrl[6])
+        self.output["Postal_code"].append(dividedUrl[7])
 
         soup = BeautifulSoup(response.text, "lxml").prettify()
         tables: DataFrame = pd.read_html(soup)
