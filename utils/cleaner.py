@@ -6,6 +6,7 @@ import re
 from typing import List
 import lxml
 from csv import reader
+import concurrent.futures
 
 
 class Cleaner:
@@ -46,19 +47,24 @@ class Cleaner:
         """
 
         response = requests.get(url)
+        print(url)
         regex: str = "[^\/]+"
         dividedUrl: List[str] = re.findall(regex, url)
-        subtypeOfProperty: str = dividedUrl[4]
-        self.output["Subtype of property"].append(subtypeOfProperty)
-        self.output["Locality"].append(dividedUrl[6])
-        self.output["Postal_code"].append(dividedUrl[7])
+
+        # subtypeOfProperty: str = dividedUrl[4]
+        # self.output["Subtype of property"].append(subtypeOfProperty)
+        # self.output["Locality"].append(dividedUrl[6])
+        # self.output["Postal_code"].append(dividedUrl[7])
 
         soup = BeautifulSoup(response.text, "lxml").prettify()
         tables: DataFrame = pd.read_html(soup)
+
+
+        num_table = len(tables)
+        all_tables = [tables[idx] for idx in range(num_table)]
+
         # fmt:off
-        df = pd.concat(
-            [tables[0], tables[1], tables[2], tables[3], tables[4], tables[5], tables[6]]
-        )
+        df = pd.concat(all_tables)
 
         for _, v in df.iterrows():
             if v[0] in self.list_asked:
@@ -95,8 +101,22 @@ class Cleaner:
 
 
 if __name__ == "__main__":
+
+    # url = "https://www.immoweb.be/en/classified/town-house/for-sale/laeken/1020/9730456?searchId=61f79f25891ae"
+
     dealer = Cleaner()
 
-    url = "https://www.immoweb.be/en/classified/town-house/for-sale/laeken/1020/9730456?searchId=61f79f25891ae"
+    df = pd.read_csv(r'./data/property_link.csv')
+    links = df.link.to_list()
+    url = links[0]
+
     result = dealer.getData(url)
     print(result)
+
+    # with concurrent.futures.ThreadPoolExecutor() as executor:
+    #     """Run concurrently using Threading module and collect link
+    #     for every the pages mentioned in the list"""
+    #     f1 = executor.map(dealer.getData, links)
+
+    # for f in f1:
+    #     print(f)
