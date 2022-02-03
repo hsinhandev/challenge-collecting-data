@@ -13,3 +13,12 @@ def kill_browser():
     elif platform == "win32":
         # Windows...
         os.system("taskkill /im firefox.exe /f")
+
+
+def counted(f):
+    def wrapped(*args, **kwargs):
+        wrapped.calls += 1
+        return f(*args, **kwargs)
+
+    wrapped.calls = 0
+    return wrapped

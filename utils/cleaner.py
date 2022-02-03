@@ -1,14 +1,15 @@
 import logging
+from concurrent.futures import ProcessPoolExecutor
 from typing import Dict, List
 from urllib import parse
-
-import pandas as pd
+from functools import partial
 import numpy as np
-
+import pandas as pd
 import requests
 from bs4 import BeautifulSoup
 
 import constants
+from helper import kill_browser
 
 
 def csv_to_list() -> List[str]:
@@ -29,7 +30,9 @@ def extract_property_info(url: str, idx: int):
 
     html = requests.get(url)
 
-    idx = idx + 1
+    idx += 1
+    print(f"=====Start {idx}")
+
     if html.ok:
         soup = BeautifulSoup(html.content, "lxml")
 
@@ -64,6 +67,8 @@ def extract_property_info(url: str, idx: int):
         for k in constants.TARGET_ATTRS:
             if not output[k] or len(output[k]) != idx:
                 output[k].append(None)
+
+        print(f"=====End {idx}")
         return output
 
     raise Exception("Could not parse")
@@ -79,11 +84,11 @@ def parse_property_type(t: str) -> str:
 if __name__ == "__main__":
     output: Dict[str, List[str]] = {k: [] for k in constants.TARGET_ATTRS}
     property_links = csv_to_list()
-
-    for idx, link in enumerate(property_links[0:15]):
+    for idx, link in enumerate(property_links[0:100]):
         extract_property_info(link, idx)
 
     df = pd.DataFrame(output)
+
     # Data cleaning
     df["Kitchen type"] = np.where(df["Kitchen type"] != "Not installed", 1, 0)
     # clean YES/NO to 1/0

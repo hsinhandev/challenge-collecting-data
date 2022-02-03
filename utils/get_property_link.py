@@ -55,7 +55,7 @@ if __name__ == "__main__":
     property_link_output = {"links": []}
 
     with ProcessPoolExecutor(max_workers=10) as ex:
-        futures = ex.map(extract_property_link, range(1, 10))
+        futures = ex.map(extract_property_link, range(1, 334))
         # for idx in range(1, 10):
         #     futures.append(ex.submit(extract_property_link, idx))
 
@@ -69,7 +69,7 @@ if __name__ == "__main__":
         # browser.quit()
         kill_browser()
 
-        # df = pd.DataFrame(property_link_output)
-        # df.to_csv(r"./data/property_link.csv", index=False, header=True)
+        df = pd.DataFrame(property_link_output)
+        df.to_csv(r"./data/property_link.csv", index=False, header=True)
 
     print(f"How long does it take: {round(end - start, 2)}")
